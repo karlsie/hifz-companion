@@ -1,0 +1,621 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Hifz Companion</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Marcellus&family=Figtree:wght@400;500;600;700&family=Amiri:wght@400;700&display=swap">
+<style>
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0}
+[hidden]{display:none!important}
+
+/* Layout: one narrow column like a phone app; a lock-screen notification card leads, the day's five blocks follow, a player docks at the bottom. */
+:root{
+  --bg:#EEF2EE; --surface:#FFFFFF; --sunk:#E3E9E4; --fg:#1B2723; --muted:#5B6B64; --line:#CFD9D3;
+  --accent:#1E6A51; --accent-ink:#FFFFFF; --gold:#A77B22; --warn:#9A5B12; --danger:#A33A2E;
+  --shade:rgba(20,40,32,.08);
+  --f-display:"Marcellus","Palatino Linotype",Palatino,Georgia,serif;
+  --f-body:"Figtree",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --f-ar:"Amiri","Traditional Arabic","Noto Naskh Arabic",serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0E1613; --surface:#16211D; --sunk:#1D2A25; --fg:#E4EBE7; --muted:#97A79F; --line:#2B3A34;
+  --accent:#5DBE96; --accent-ink:#08130E; --gold:#D8B260; --warn:#E3A35A; --danger:#E57F70; --shade:rgba(0,0,0,.35); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0E1613; --surface:#16211D; --sunk:#1D2A25; --fg:#E4EBE7; --muted:#97A79F; --line:#2B3A34;
+  --accent:#5DBE96; --accent-ink:#08130E; --gold:#D8B260; --warn:#E3A35A; --danger:#E57F70; --shade:rgba(0,0,0,.35); color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 140px}
+.wrap{max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+h1,h2,h3{font-family:var(--f-display);font-weight:400;margin:0;text-wrap:balance}
+h1{font-size:28px;line-height:1.2}
+h2{font-size:21px}
+h3{font-size:17px}
+p{margin:0}
+.ar{font-family:var(--f-ar);direction:rtl}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+.eyebrow{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+button,select,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:14px 10px;display:flex;flex-direction:column;gap:12px;border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.brand .basmala{font-size:20px;color:var(--gold)}
+nav.tabs{display:flex;gap:4px;overflow-x:auto}
+nav.tabs button{border:0;background:transparent;padding:7px 12px;border-radius:999px;color:var(--muted);font-weight:600;white-space:nowrap}
+nav.tabs button[aria-selected="true"]{background:var(--fg);color:var(--bg)}
+
+.hello{display:flex;flex-direction:column;gap:4px;padding-top:6px}
+.hello .label-chip{color:var(--accent)}
+
+/* lock-screen style notification */
+.lock{background:linear-gradient(160deg,#18332A,#0F1E19 70%);border-radius:22px;padding:18px 16px 16px;color:#EAF1EC;display:flex;flex-direction:column;gap:12px}
+.lock .clock{font-family:var(--f-display);font-size:40px;line-height:1;text-align:center;font-variant-numeric:tabular-nums;color:#F2E6C8}
+.lock .date{text-align:center;font-size:13px;color:#B9C8BF;margin-top:-4px}
+.notif{background:rgba(255,255,255,.12);backdrop-filter:blur(6px);border-radius:16px;padding:12px 14px;display:flex;flex-direction:column;gap:6px}
+.notif .app{display:flex;justify-content:space-between;font-size:12px;color:#C9D6CE}
+.notif .app b{font-weight:600;letter-spacing:.02em}
+.notif .ttl{font-weight:700;font-size:15px}
+.notif .bdy{font-size:14px;color:#E1EAE4}
+.notif[dir="rtl"] .ttl,.notif[dir="rtl"] .bdy{font-family:var(--f-ar);font-size:17px}
+.notif .act{align-self:flex-start;margin-top:4px;border:0;background:#F2E6C8;color:#17261F;border-radius:999px;padding:7px 14px;font-weight:700}
+.notif[dir="rtl"] .act{align-self:flex-end;font-family:var(--f-ar);font-size:16px}
+
+.blocks{display:flex;flex-direction:column;border-top:1px solid var(--line)}
+.blk{display:grid;grid-template-columns:58px 1fr auto;gap:12px;align-items:start;padding-block:14px;border-bottom:1px solid var(--line)}
+.blk .t{font-variant-numeric:tabular-nums;font-weight:700;font-size:16px}
+.blk .t span{display:block;font-weight:500;font-size:12px;color:var(--muted)}
+.blk .info{min-width:0;display:flex;flex-direction:column;gap:3px}
+.blk .info .what{color:var(--muted);font-size:13.5px;overflow-wrap:anywhere}
+.blk.off{opacity:.5}
+.blk.next .t{color:var(--accent)}
+.pill{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--sunk);color:var(--muted);letter-spacing:.02em}
+.pill.now{background:var(--accent);color:var(--accent-ink)}
+.pill.done{background:transparent;border:1px solid var(--line)}
+.btns{display:flex;flex-direction:column;gap:6px;align-items:stretch}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:7px 12px;font-weight:600;font-size:13.5px;white-space:nowrap}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.ghost{background:transparent}
+.btn.danger{color:var(--danger)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+
+.budget{display:flex;flex-direction:column;gap:6px}
+.bar{height:8px;border-radius:999px;background:var(--sunk);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent)}
+.bar.over i{background:var(--warn)}
+
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:14px}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:end}
+.field{display:flex;flex-direction:column;gap:4px;min-width:0}
+.field label{font-size:12.5px;color:var(--muted);font-weight:600}
+input[type=text],input[type=number],input[type=time],select{background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:7px 9px;min-width:0;max-width:100%}
+input[type=number]{width:74px}
+.days{display:flex;gap:4px;flex-wrap:wrap}
+.days button{border:1px solid var(--line);background:transparent;border-radius:8px;width:38px;padding:5px 0;font-size:12.5px;font-weight:600;color:var(--muted)}
+.days button[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.seg button{border:0;background:transparent;padding:6px 12px;font-weight:600;font-size:13.5px;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.items{display:flex;flex-direction:column;gap:8px}
+.item{display:flex;flex-wrap:wrap;gap:8px;align-items:end;padding:10px;border-radius:10px;background:var(--sunk)}
+.item select{max-width:180px}
+.switch{display:flex;align-items:center;gap:8px;font-weight:600}
+.switch input{width:18px;height:18px;accent-color:var(--accent)}
+.labels{display:flex;flex-direction:column;gap:2px}
+.labels label{display:grid;grid-template-columns:22px 1fr auto;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line)}
+.labels .ar{font-size:16px;color:var(--muted)}
+.note{font-size:13px;color:var(--muted);border-left:3px solid var(--gold);padding-left:10px}
+
+/* player */
+.player{position:fixed;left:0;right:0;bottom:0;z-index:10;background:var(--surface);border-top:1px solid var(--line);box-shadow:0 -6px 20px var(--shade);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-top:12px;padding-bottom:calc(12px + env(safe-area-inset-bottom,0px))}
+.player .in{max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:8px}
+.player .head{display:flex;justify-content:space-between;gap:10px;align-items:center}
+.player .now{min-width:0}
+.player .now b{display:block;font-family:var(--f-display);font-weight:400;font-size:17px}
+.player .now span{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.player .ctl{display:flex;gap:6px}
+.round{width:42px;height:42px;border-radius:50%;border:1px solid var(--line);background:var(--bg);display:grid;place-items:center;font-size:15px}
+.round.play{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.player .err{color:var(--danger);font-size:13px}
+
+.toast{position:fixed;left:50%;transform:translateX(-50%);top:calc(10px + env(safe-area-inset-top,0px));z-index:20;width:min(520px,calc(100% - 32px))}
+.toast .lock{padding:10px;border-radius:18px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+.toast .x{position:absolute;right:10px;top:8px;background:transparent;border:0;color:#C9D6CE;font-size:18px}
+@media (prefers-reduced-motion:no-preference){.toast{animation:drop .35s ease-out}@keyframes drop{from{transform:translate(-50%,-20px);opacity:0}}}
+</style>
+</head>
+<body>
+
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <h2>Hifz Companion</h2>
+      <span class="basmala ar" aria-label="Bismillahir-Rahmanir-Rahim">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</span>
+    </div>
+    <nav class="tabs" role="tablist">
+      <button role="tab" data-tab="today" aria-selected="true">Today</button>
+      <button role="tab" data-tab="schedule" aria-selected="false">Schedule</button>
+      <button role="tab" data-tab="labels" aria-selected="false">Labels</button>
+      <button role="tab" data-tab="settings" aria-selected="false">Settings</button>
+    </nav>
+  </header>
+
+  <section id="tab-today"></section>
+  <section id="tab-schedule" hidden></section>
+  <section id="tab-labels" hidden></section>
+  <section id="tab-settings" hidden></section>
+</div>
+
+<div class="player" id="player" hidden>
+  <div class="in">
+    <div class="head">
+      <div class="now"><b id="pl-title">—</b><span id="pl-sub"></span></div>
+      <div class="ctl">
+        <button class="round" id="pl-prev" aria-label="Previous ayah">⏮</button>
+        <button class="round play" id="pl-toggle" aria-label="Pause">❚❚</button>
+        <button class="round" id="pl-next" aria-label="Next ayah">⏭</button>
+        <button class="round" id="pl-stop" aria-label="Stop">■</button>
+      </div>
+    </div>
+    <div class="bar"><i id="pl-bar" style="width:0%"></i></div>
+    <div class="err" id="pl-err" hidden></div>
+  </div>
+</div>
+<div class="toast" id="toast" hidden></div>
+<audio id="audio" preload="auto"></audio>
+
+<script>
+const SURAH = [["Al-Fatihah", "الفاتحة", 7], ["Al-Baqarah", "البقرة", 286], ["Ali 'Imran", "آل عمران", 200], ["An-Nisa", "النساء", 176], ["Al-Ma'idah", "المائدة", 120], ["Al-An'am", "الأنعام", 165], ["Al-A'raf", "الأعراف", 206], ["Al-Anfal", "الأنفال", 75], ["At-Tawbah", "التوبة", 129], ["Yunus", "يونس", 109], ["Hud", "هود", 123], ["Yusuf", "يوسف", 111], ["Ar-Ra'd", "الرعد", 43], ["Ibrahim", "إبراهيم", 52], ["Al-Hijr", "الحجر", 99], ["An-Nahl", "النحل", 128], ["Al-Isra", "الإسراء", 111], ["Al-Kahf", "الكهف", 110], ["Maryam", "مريم", 98], ["Taha", "طه", 135], ["Al-Anbiya", "الأنبياء", 112], ["Al-Hajj", "الحج", 78], ["Al-Mu'minun", "المؤمنون", 118], ["An-Nur", "النور", 64], ["Al-Furqan", "الفرقان", 77], ["Ash-Shu'ara", "الشعراء", 227], ["An-Naml", "النمل", 93], ["Al-Qasas", "القصص", 88], ["Al-'Ankabut", "العنكبوت", 69], ["Ar-Rum", "الروم", 60], ["Luqman", "لقمان", 34], ["As-Sajdah", "السجدة", 30], ["Al-Ahzab", "الأحزاب", 73], ["Saba", "سبأ", 54], ["Fatir", "فاطر", 45], ["Ya-Sin", "يس", 83], ["As-Saffat", "الصافات", 182], ["Sad", "ص", 88], ["Az-Zumar", "الزمر", 75], ["Ghafir", "غافر", 85], ["Fussilat", "فصلت", 54], ["Ash-Shura", "الشورى", 53], ["Az-Zukhruf", "الزخرف", 89], ["Ad-Dukhan", "الدخان", 59], ["Al-Jathiyah", "الجاثية", 37], ["Al-Ahqaf", "الأحقاف", 35], ["Muhammad", "محمد", 38], ["Al-Fath", "الفتح", 29], ["Al-Hujurat", "الحجرات", 18], ["Qaf", "ق", 45], ["Adh-Dhariyat", "الذاريات", 60], ["At-Tur", "الطور", 49], ["An-Najm", "النجم", 62], ["Al-Qamar", "القمر", 55], ["Ar-Rahman", "الرحمن", 78], ["Al-Waqi'ah", "الواقعة", 96], ["Al-Hadid", "الحديد", 29], ["Al-Mujadilah", "المجادلة", 22], ["Al-Hashr", "الحشر", 24], ["Al-Mumtahanah", "الممتحنة", 13], ["As-Saff", "الصف", 14], ["Al-Jumu'ah", "الجمعة", 11], ["Al-Munafiqun", "المنافقون", 11], ["At-Taghabun", "التغابن", 18], ["At-Talaq", "الطلاق", 12], ["At-Tahrim", "التحريم", 12], ["Al-Mulk", "الملك", 30], ["Al-Qalam", "القلم", 52], ["Al-Haqqah", "الحاقة", 52], ["Al-Ma'arij", "المعارج", 44], ["Nuh", "نوح", 28], ["Al-Jinn", "الجن", 28], ["Al-Muzzammil", "المزمل", 20], ["Al-Muddaththir", "المدثر", 56], ["Al-Qiyamah", "القيامة", 40], ["Al-Insan", "الإنسان", 31], ["Al-Mursalat", "المرسلات", 50], ["An-Naba'", "النبأ", 40], ["An-Nazi'at", "النازعات", 46], ["'Abasa", "عبس", 42], ["At-Takwir", "التكوير", 29], ["Al-Infitar", "الانفطار", 19], ["Al-Mutaffifin", "المطففين", 36], ["Al-Inshiqaq", "الانشقاق", 25], ["Al-Buruj", "البروج", 22], ["At-Tariq", "الطارق", 17], ["Al-A'la", "الأعلى", 19], ["Al-Ghashiyah", "الغاشية", 26], ["Al-Fajr", "الفجر", 30], ["Al-Balad", "البلد", 20], ["Ash-Shams", "الشمس", 15], ["Al-Layl", "الليل", 21], ["Ad-Duha", "الضحى", 11], ["Ash-Sharh", "الشرح", 8], ["At-Tin", "التين", 8], ["Al-'Alaq", "العلق", 19], ["Al-Qadr", "القدر", 5], ["Al-Bayyinah", "البينة", 8], ["Az-Zalzalah", "الزلزلة", 8], ["Al-'Adiyat", "العاديات", 11], ["Al-Qari'ah", "القارعة", 11], ["At-Takathur", "التكاثر", 8], ["Al-'Asr", "العصر", 3], ["Al-Humazah", "الهمزة", 9], ["Al-Fil", "الفيل", 5], ["Quraysh", "قريش", 4], ["Al-Ma'un", "الماعون", 7], ["Al-Kawthar", "الكوثر", 3], ["Al-Kafirun", "الكافرون", 6], ["An-Nasr", "النصر", 3], ["Al-Masad", "المسد", 5], ["Al-Ikhlas", "الإخلاص", 4], ["Al-Falaq", "الفلق", 5], ["An-Nas", "الناس", 6]];          // [englishName, arabicName, ayahCount]
+const S = {"version": 1, "notes": {"languages": "en = English, id = Bahasa Indonesia, ar = Arabic", "arabic_gender": "Arabic labels are gendered. Pick ar.m or ar.f from the user's 'address form' setting; neutral labels have identical m and f.", "placeholders": "{salam}, {greeting}, {label}, {name}, {surah}, {ayat}, {range}, {passages}. Fill {surah} with the surah name in the user's language (e.g. 'Al-Mulk' / 'الملك').", "emoji": "Each block has a separate 'emoji' field. Append it to the title only when the user's emoji setting is on.", "label_rule": "Labels are aspirations, never claims (e.g. 'seeker of Jannah', not 'person of Jannah'). Custom labels added by users should follow the same idea.", "name": "If the user sets a name, the app may use '{name}' in place of '{label}' on any day."}, "salam": {"en": "Assalamu'alaikum", "id": "Assalamu'alaikum", "ar": "السلام عليكم"}, "time_slots": [{"key": "morning", "from": "03:30", "to": "11:59", "greeting": {"en": "good morning", "id": "selamat pagi", "ar": "صباح الخير"}}, {"key": "midday", "from": "12:00", "to": "14:59", "greeting": {"en": "good afternoon", "id": "selamat siang", "ar": "نهارك سعيد"}}, {"key": "afternoon", "from": "15:00", "to": "17:59", "greeting": {"en": "good afternoon", "id": "selamat sore", "ar": "مساء الخير"}}, {"key": "evening", "from": "18:00", "to": "03:29", "greeting": {"en": "good evening", "id": "selamat malam", "ar": "مساء الخير"}}], "labels": [{"key": "seeker_of_jannah", "default": true, "en": "seeker of Jannah", "id": "pencari surga", "ar": {"m": "طالبَ الجنة", "f": "طالبةَ الجنة"}}, {"key": "friend_of_quran", "default": true, "en": "friend of the Quran", "id": "sahabat Al-Qur'an", "ar": {"m": "صاحبَ القرآن", "f": "صاحبةَ القرآن"}}, {"key": "grateful_heart", "default": true, "en": "grateful heart", "id": "hati yang bersyukur", "ar": {"m": "صاحبَ القلب الشاكر", "f": "صاحبةَ القلب الشاكر"}}, {"key": "patient_soul", "default": true, "en": "patient soul", "id": "jiwa yang sabar", "ar": {"m": "صاحبَ الصبر الجميل", "f": "صاحبةَ الصبر الجميل"}}, {"key": "light_of_home", "default": true, "en": "light of your home", "id": "cahaya rumahmu", "ar": {"m": "نورَ البيت", "f": "نورَ البيت"}}, {"key": "traveller_to_allah", "default": true, "en": "traveller to Allah", "id": "musafir menuju Allah", "ar": {"m": "مَن يسير إلى الله", "f": "مَن يسير إلى الله"}}, {"key": "remembering_heart", "default": true, "en": "heart that remembers Allah", "id": "hati yang selalu ingat Allah", "ar": {"m": "ذاكرَ الله", "f": "ذاكرةَ الله"}}, {"key": "hafiz_in_making", "default": false, "en": "keeper of Allah's words", "id": "penghafal Al-Qur'an", "ar": {"m": "مَن يحفظ كتاب الله", "f": "مَن يحفظ كتاب الله"}}, {"key": "gentle_heart", "default": false, "en": "gentle heart", "id": "hati yang lembut", "ar": {"m": "صاحبَ القلب الرحيم", "f": "صاحبةَ القلب الرحيم"}}, {"key": "hopeful_soul", "default": false, "en": "hopeful soul", "id": "jiwa yang penuh harap", "ar": {"m": "مَن يرجو رحمة الله", "f": "مَن يرجو رحمة الله"}}, {"key": "steadfast_one", "default": false, "en": "steadfast one", "id": "pejuang istiqamah", "ar": {"m": "مَن يثبت على الخير", "f": "مَن يثبت على الخير"}}, {"key": "seeker_of_knowledge", "default": false, "en": "seeker of knowledge", "id": "penuntut ilmu", "ar": {"m": "طالبَ العلم", "f": "طالبةَ العلم"}}, {"key": "returning_heart", "default": false, "en": "heart that returns to Allah", "id": "hati yang kembali kepada Allah", "ar": {"m": "مَن يعود إلى الله", "f": "مَن يعود إلى الله"}}, {"key": "sower_of_good", "default": false, "en": "sower of good", "id": "penanam kebaikan", "ar": {"m": "زارعَ الخير", "f": "زارعةَ الخير"}}], "rotation": {"rule": "One label per day, cycling through labels where default = true. Users can enable extra labels, reorder, or add their own.", "custom_label_hint": {"en": "Add a label that lifts your heart, e.g. 'friend of the Quran'", "id": "Tambahkan julukan yang menyemangatimu, misalnya 'sahabat Al-Qur'an'", "ar": "أضف لقبًا يبعث فيك الأمل، مثل «صاحب القرآن»"}}, "button": {"en": "Bismillah ▶", "id": "Bismillah ▶", "ar": "بسم الله ▶"}, "notifications": {"fajr_new": {"emoji": "🌅", "title": {"en": "{salam}, {greeting}, {label}", "id": "{salam}, {greeting}, {label}", "ar": "{salam}، {greeting} يا {label}"}, "body": {"en": ["Today's new ayat: {surah} {ayat}. A fresh page, a fresh start.", "{surah} {ayat} is waiting for you. Let's begin gently.", "A new day, a few new ayat: {surah} {ayat}. You've got this."], "id": ["Ayat baru hari ini: {surah} {ayat}. Halaman baru, awal yang baru.", "{surah} {ayat} sudah menantimu. Yuk, mulai pelan-pelan.", "Hari baru, ayat baru: {surah} {ayat}. Kamu pasti bisa."], "ar": ["آيات اليوم الجديدة: {surah} {ayat}. صفحة جديدة وبداية جديدة.", "{surah} {ayat} في انتظارك. لنبدأ بهدوء.", "يوم جديد وآيات جديدة: {surah} {ayat}. بالتوفيق."]}}, "morning_review": {"emoji": "☀️", "title": {"en": "{greeting}, {label}", "id": "{greeting}, {label}", "ar": "{greeting} يا {label}"}, "body": {"en": ["Your week's ayat are waiting: {range}. Twenty gentle minutes.", "A quick visit to {range} keeps them close to your heart."], "id": ["Hafalan pekan ini menunggumu: {range}. Dua puluh menit yang ringan.", "Mampir sebentar ke {range} agar tetap lekat di hati."], "ar": ["مراجعة آيات هذا الأسبوع: {range}. عشرون دقيقة بهدوء.", "زيارة قصيرة إلى {range} تُبقيها قريبة من القلب."]}}, "asr_older_review": {"emoji": "🌤️", "title": {"en": "{greeting}, {label}", "id": "{greeting}, {label}", "ar": "{greeting} يا {label}"}, "body": {"en": ["Time to revisit {range}. What you hold, you keep.", "Your earlier ayat miss you: {range}."], "id": ["Saatnya mengulang {range}. Yang dijaga, akan terjaga.", "Hafalan lamamu rindu disapa: {range}."], "ar": ["وقت مراجعة {range}. ما نتعاهده يبقى معنا.", "آياتك السابقة تنتظرك: {range}."]}}, "maghrib_calm": {"emoji": "🌙", "title": {"en": "{greeting}, {label}", "id": "{greeting}, {label}", "ar": "{greeting} يا {label}"}, "body": {"en": ["A calm moment with {passages}. Breathe and listen.", "Let {passages} settle your heart this evening."], "id": ["Momen tenang bersama {passages}. Tarik napas, dengarkan.", "Biarkan {passages} menenangkan hatimu malam ini."], "ar": ["لحظة هدوء مع {passages}.", "{passages} لطمأنينة القلب هذا المساء."]}}, "bedtime": {"emoji": "🤍", "title": {"en": "Thank you for today, {label}", "id": "Terima kasih untuk hari ini, {label}", "ar": "شكرًا على هذا اليوم يا {label}"}, "body": {"en": ["Rest with {passages}. May Allah grant you peaceful sleep.", "You showed up today, and that matters. Sleep in Allah's care."], "id": ["Istirahat bersama {passages}. Semoga Allah beri tidur yang tenang.", "Kamu sudah hadir hari ini, dan itu berarti. Tidurlah dalam penjagaan Allah."], "ar": ["مع {passages}. نومًا هانئًا بإذن الله.", "يومٌ مبارك انقضى. في حفظ الله ورعايته."]}, "default_passages": {"en": "Al-Mulk and Ayat al-Kursi", "id": "Al-Mulk dan Ayat Kursi", "ar": "سورة الملك وآية الكرسي"}}, "welcome_back": {"emoji": "🤍", "use_when": "The user has not opened the app or played a block for 2+ days. Never mention missed days or streaks.", "title": {"en": "Welcome back, {label}", "id": "Selamat datang kembali, {label}", "ar": "أهلًا بعودتك يا {label}"}, "body": {"en": ["Bismillah, let's continue from {surah} {ayat}."], "id": ["Bismillah, kita lanjutkan dari {surah} {ayat}."], "ar": ["بسم الله، نكمل من {surah} {ayat}."]}}}, "in_app_welcome": {"arabic_basmala": "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ", "transliteration": "Bismillahir-Rahmanir-Rahim", "line": {"en": "In the name of Allah, the Most Gracious, the Most Merciful.", "id": "Dengan nama Allah Yang Maha Pengasih lagi Maha Penyayang.", "ar": "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ"}}};             // notification strings (en / id / ar)
+
+const RECITERS = [
+  ["Husary_Muallim_128kbps","Al-Husary · teaching (slow, for memorizing)"],
+  ["Husary_128kbps","Al-Husary · murattal"],
+  ["Alafasy_128kbps","Mishary Alafasy"],
+  ["Minshawy_Murattal_128kbps","Al-Minshawi · murattal"],
+  ["Abdul_Basit_Murattal_192kbps","Abdul Basit · murattal"],
+  ["Ghamadi_40kbps","Saad Al-Ghamdi"],
+  ["MaherAlMuaiqly128kbps","Maher Al-Muaiqly"],
+  ["Abdullah_Basfar_192kbps","Abdullah Basfar"]
+];
+const audioUrl=(folder,s,a)=>`https://everyayah.com/data/${folder}/${String(s).padStart(3,"0")}${String(a).padStart(3,"0")}.mp3`;
+
+/* ---------- the 12-week starting plan (from Al-Fatihah) ---------- */
+const full=s=>({s,f:1,t:SURAH[s-1][2]});
+const CHILD_PLAN=[[full(114),full(113)],[full(112),full(111)],[full(110),full(109)],[full(108),full(107)],[full(106),full(105)],[full(104),full(103)],[full(102)],[{s:2,f:255,t:255}],[full(101)],[full(100)],[full(99),full(97)],[{s:2,f:285,t:286}]];
+const ADULT_PLAN=[
+  [...CHILD_PLAN[0],...CHILD_PLAN[1]],[...CHILD_PLAN[2],...CHILD_PLAN[3]],[...CHILD_PLAN[4],...CHILD_PLAN[5]],
+  [...CHILD_PLAN[6],...CHILD_PLAN[7]],[...CHILD_PLAN[8],...CHILD_PLAN[9]],[...CHILD_PLAN[10],...CHILD_PLAN[11]],
+  [full(98)],[full(96)],[full(95),full(94)],[full(93)],[full(92)],[]
+];
+const CALM=[
+  {name:"After hardship comes ease",items:[full(93),full(94),{s:13,f:28,t:28},{s:2,f:153,t:157},{s:65,f:2,t:3},{s:39,f:53,t:53},{s:3,f:190,t:200}]},
+  {name:"Mercy and gratitude",items:[full(1),full(55),{s:14,f:7,t:7}]},
+  {name:"Hope after loss",items:[{s:12,f:83,t:101},{s:21,f:83,t:88},{s:20,f:25,t:28},{s:9,f:40,t:40},{s:3,f:139,t:139},{s:3,f:173,t:173},full(93)]},
+  {name:"Safety and trust",items:[{s:28,f:7,t:13},{s:19,f:16,t:26},{s:48,f:4,t:4},{s:2,f:186,t:186},{s:57,f:22,t:23},{s:89,f:27,t:30},full(93),full(94)]}
+];
+const PROFILES={
+  adult:{name:"Adult",min:{fajr_new:30,morning_review:20,asr_older_review:30,maghrib_calm:15,bedtime:25},rep:7},
+  teen:{name:"Teen (13–17)",min:{fajr_new:25,morning_review:15,asr_older_review:25,maghrib_calm:10,bedtime:15},rep:6},
+  child:{name:"Child (6–12)",min:{fajr_new:15,morning_review:10,asr_older_review:10,maghrib_calm:5,bedtime:10},rep:5}
+};
+const BLOCK_DEFS=[
+  {key:"fajr_new",name:"New ayat (sabaq)",anchor:"After Fajr",time:"05:15",reciter:"hifz"},
+  {key:"morning_review",name:"Recent review",anchor:"Morning",time:"07:00",reciter:"hifz"},
+  {key:"asr_older_review",name:"Older review / listen ahead",anchor:"After Asr",time:"15:45",reciter:"hifz"},
+  {key:"maghrib_calm",name:"Calm and mood",anchor:"After Maghrib",time:"18:00",reciter:"calm"},
+  {key:"bedtime",name:"Bedtime",anchor:"Before sleep",time:"21:00",reciter:"calm"}
+];
+const DAY_SHORT=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+
+/* ---------- state ---------- */
+const todayStr=(d=new Date())=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+function defaults(){
+  return {
+    name:"", lang:"en", arForm:"m", emoji:true, profile:"adult",
+    startDate:todayStr(), hifzReciter:"Husary_Muallim_128kbps", calmReciter:"Alafasy_128kbps",
+    labelsOn:S.labels.filter(l=>l.default).map(l=>l.key), customLabels:[],
+    blocks:BLOCK_DEFS.map(b=>({key:b.key,time:b.time,minutes:PROFILES.adult.min[b.key],on:true,days:[0,1,2,3,4,5,6],mode:"standard",items:[],repeat:PROFILES.adult.rep})),
+    fired:{}, lastActive:todayStr()
+  };
+}
+let st=defaults();
+try{const raw=localStorage.getItem("hifz-companion");if(raw){const o=JSON.parse(raw);st={...st,...o};}}catch(e){}
+function save(){try{localStorage.setItem("hifz-companion",JSON.stringify(st));}catch(e){}}
+
+/* ---------- helpers ---------- */
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const dayNum=(d=new Date())=>Math.floor((new Date(d.getFullYear(),d.getMonth(),d.getDate())-new Date(2000,0,1))/864e5);
+const toMin=t=>{const [h,m]=t.split(":").map(Number);return h*60+m};
+function planWeek(){const ms=new Date(todayStr())-new Date(st.startDate);return Math.min(12,Math.max(1,Math.floor(ms/864e5/7)+1));}
+function surahName(s,lang=st.lang){return lang==="ar"?SURAH[s-1][1]:SURAH[s-1][0];}
+function itemText(it,lang=st.lang){
+  const n=surahName(it.s,lang);const whole=it.f===1&&it.t===SURAH[it.s-1][2];
+  if(whole)return n;
+  return `${n} ${it.f===it.t?it.f:it.f+"–"+it.t}`;
+}
+function listText(items,lang=st.lang,max=3){
+  const sep=lang==="ar"?"، ":", ";
+  const names=items.map(i=>itemText(i,lang));
+  return names.length>max?names.slice(0,max).join(sep)+"…":names.join(sep);
+}
+function plan(){return st.profile==="adult"?ADULT_PLAN:CHILD_PLAN;}
+function memorizedSoFar(week){
+  const out=[full(1)];
+  plan().slice(0,week).forEach(w=>w.forEach(i=>out.push(i)));
+  return out;
+}
+
+/* ---------- what each block plays today ---------- */
+function blockContent(b,date=new Date()){
+  const P=PROFILES[st.profile]; const wk=planWeek(); const dow=date.getDay();
+  if(b.mode==="custom")return {items:b.items,rep:b.repeat||1,whole:1,note:"Custom"};
+  const thisWeek=plan()[wk-1].length?plan()[wk-1]:memorizedSoFar(wk);
+  switch(b.key){
+    case "fajr_new":
+      if(dow===5)return {items:[full(18)],rep:1,whole:1,note:"Friday: Al-Kahf"};
+      if(dow===4)return {items:thisWeek,rep:3,whole:2,note:"Thursday: consolidate the week"};
+      return {items:thisWeek,rep:P.rep,whole:3,note:`Week ${wk} new ayat`};
+    case "morning_review":
+      return {items:memorizedSoFar(wk),rep:1,whole:1,note:"Everything memorized so far"};
+    case "asr_older_review":
+      return dayNum(date)%2===0
+        ?{items:Array.from({length:13},(_,i)=>full(78+i)),rep:1,whole:1,note:"Listen ahead: Juz 30, An-Naba' to Al-Balad"}
+        :{items:Array.from({length:24},(_,i)=>full(91+i)),rep:1,whole:1,note:"Listen ahead: Juz 30, Ash-Shams to An-Nas"};
+    case "maghrib_calm":{
+      const c=CALM[Math.floor(dayNum(date)/7)%4];
+      return {items:c.items,rep:1,whole:1,note:`Calm week: ${c.name}`};}
+    case "bedtime":{
+      const quls=[full(112),full(113),full(114)];
+      const items=st.profile==="child"
+        ?[{s:2,f:255,t:255},{s:2,f:285,t:286},...quls,...quls,...quls]
+        :[...thisWeek,full(32),full(67),{s:2,f:255,t:255},{s:2,f:285,t:286},full(109),...quls,...quls,...quls];
+      return {items,rep:1,whole:1,note:st.profile==="child"?"Bedtime protection":"Today's ayat, then the Sunnah bedtime list"};}
+  }
+}
+function buildQueue(c){
+  const q=[];
+  for(let w=0;w<c.whole;w++)for(const it of c.items){
+    if(it.f===1&&it.s!==1&&it.s!==9)q.push({s:1,a:1,basmala:true,of:it.s});
+    for(let a=it.f;a<=it.t;a++)for(let r=0;r<c.rep;r++)q.push({s:it.s,a});
+  }
+  return q;
+}
+
+/* ---------- notification text ---------- */
+function labelsAvailable(){
+  const L=S.labels.filter(l=>st.labelsOn.includes(l.key)).map(l=>({en:l.en,id:l.id,ar:l.ar[st.arForm]}));
+  st.customLabels.forEach(t=>L.push({en:t,id:t,ar:t}));
+  return L.length?L:[{en:"friend of the Quran",id:"sahabat Al-Qur'an",ar:"صاحب القرآن"}];
+}
+function labelToday(date=new Date()){const L=labelsAvailable();return L[dayNum(date)%L.length][st.lang];}
+function greetingFor(time){
+  const m=toMin(time);
+  const k=m>=210&&m<720?"morning":m>=720&&m<900?"midday":m>=900&&m<1080?"afternoon":"evening";
+  return S.time_slots.find(x=>x.key===k).greeting[st.lang];
+}
+function notifText(b,date=new Date()){
+  const lang=st.lang; const away=(new Date(todayStr(date))-new Date(st.lastActive))/864e5>=2;
+  const type=away&&b.key==="fajr_new"?"welcome_back":b.key;
+  const N=S.notifications[type]; const c=blockContent(b,date);
+  const first=c.items[0]||full(1);
+  const whole=first.f===1&&first.t===SURAH[first.s-1][2];
+  const label=(st.name&&dayNum(date)%3===0)?st.name:labelToday(date);
+  const vars={salam:S.salam[lang],greeting:greetingFor(b.time),label,name:st.name||label,
+    surah:surahName(first.s,lang),ayat:whole?(lang==="ar"?"":`1–${first.t}`):(first.f===first.t?first.f:`${first.f}–${first.t}`),
+    range:listText(c.items,lang),passages:b.key==="bedtime"&&b.mode!=="custom"?(S.notifications.bedtime.default_passages[lang]):listText(c.items,lang,2)};
+  const fill=t=>t.replace(/\{(\w+)\}/g,(_,k)=>vars[k]??"").replace(/\s+([.,،])/g,"$1").replace(/\s{2,}/g," ").trim();
+  let title=fill(N.title[lang]); title=title.charAt(0).toUpperCase()+title.slice(1);
+  if(st.emoji&&N.emoji)title+=" "+N.emoji;
+  const bodies=N.body[lang]; const body=fill(bodies[dayNum(date)%bodies.length]);
+  return {title,body,button:S.button[lang],rtl:lang==="ar"};
+}
+function notifHTML(n,when){
+  return `<div class="notif" dir="${n.rtl?"rtl":"ltr"}">
+    <div class="app" dir="ltr"><b>HIFZ COMPANION</b><span>${esc(when)}</span></div>
+    <div class="ttl">${esc(n.title)}</div>
+    <div class="bdy">${esc(n.body)}</div>
+    <button class="act" data-play-from-notif>${esc(n.button)}</button>
+  </div>`;
+}
+
+/* ---------- player ---------- */
+const audio=document.getElementById("audio");
+let P={queue:[],i:0,block:null,started:0,cap:0,elapsed:0,playing:false,tick:null};
+function reciterFor(b){return BLOCK_DEFS.find(d=>d.key===b.key).reciter==="calm"?st.calmReciter:st.hifzReciter;}
+function startBlock(idx){
+  const b=st.blocks[idx]; const c=blockContent(b);
+  P={queue:buildQueue(c),i:0,block:idx,elapsed:0,cap:b.minutes*60,playing:true,tick:null,folder:reciterFor(b),last:Date.now()};
+  st.lastActive=todayStr(); st.fired[b.key]=todayStr(); save();
+  document.getElementById("player").hidden=false; document.getElementById("pl-err").hidden=true;
+  audio.volume=1; loadTrack(); clearInterval(P.tick); P.tick=setInterval(tick,1000); renderToday();
+}
+function loadTrack(){
+  const t=P.queue[P.i]; if(!t){finish();return;}
+  audio.src=audioUrl(P.folder,t.s,t.a);
+  const p=audio.play(); if(p&&p.catch)p.catch(()=>{});
+  const b=st.blocks[P.block];
+  document.getElementById("pl-title").textContent=t.basmala?`Basmala · ${SURAH[t.of-1][0]}`:`${SURAH[t.s-1][0]} ${t.s}:${t.a}`;
+  updateSub();
+  try{ if("mediaSession" in navigator){ navigator.mediaSession.metadata=new MediaMetadata({title:document.getElementById("pl-title").textContent,artist:RECITERS.find(r=>r[0]===P.folder)[1],album:BLOCK_DEFS.find(d=>d.key===b.key).name}); } }catch(e){}
+  const n=P.queue[P.i+1]; if(n){const pre=new Audio();pre.preload="auto";pre.src=audioUrl(P.folder,n.s,n.a);}
+}
+function updateSub(){
+  const left=Math.max(0,P.cap-P.elapsed); const mm=Math.floor(left/60), ss=String(Math.floor(left%60)).padStart(2,"0");
+  document.getElementById("pl-sub").textContent=`${BLOCK_DEFS.find(d=>d.key===st.blocks[P.block].key).name} · ayah ${P.i+1} of ${P.queue.length} · ${mm}:${ss} left`;
+  document.getElementById("pl-bar").style.width=Math.min(100,(P.i/Math.max(1,P.queue.length))*100)+"%";
+}
+function tick(){
+  if(!P.playing||audio.paused)return;
+  P.elapsed+=1; const left=P.cap-P.elapsed;
+  if(st.blocks[P.block].key==="bedtime"&&left<30&&left>0)audio.volume=Math.max(0.05,left/30);
+  if(left<=0){finish("Time's up for this block. Well done.");return;}
+  updateSub();
+}
+function finish(msg){
+  audio.pause(); clearInterval(P.tick); P.playing=false;
+  document.getElementById("pl-title").textContent=msg||"Block complete. Alhamdulillah.";
+  document.getElementById("pl-bar").style.width="100%";
+  document.getElementById("pl-toggle").textContent="▶"; document.getElementById("pl-toggle").setAttribute("aria-label","Play");
+}
+audio.addEventListener("ended",()=>{P.i++;loadTrack();});
+audio.addEventListener("error",()=>{
+  const e=document.getElementById("pl-err");
+  e.hidden=false; e.textContent="The recitation couldn't load. Check your internet connection. Inside the Claude preview, audio from other sites is blocked: open the hosted copy of this page to listen.";
+  P.playing=false; document.getElementById("pl-toggle").textContent="▶";
+});
+document.getElementById("pl-toggle").onclick=()=>{
+  if(P.block===null)return;
+  if(audio.paused){ if(!P.queue[P.i]){startBlock(P.block);return;} audio.play().catch(()=>{}); P.playing=true; document.getElementById("pl-toggle").textContent="❚❚"; document.getElementById("pl-toggle").setAttribute("aria-label","Pause"); }
+  else { audio.pause(); document.getElementById("pl-toggle").textContent="▶"; document.getElementById("pl-toggle").setAttribute("aria-label","Play"); }
+};
+document.getElementById("pl-next").onclick=()=>{if(P.i<P.queue.length-1){P.i++;loadTrack();}};
+document.getElementById("pl-prev").onclick=()=>{if(P.i>0){P.i--;loadTrack();}};
+document.getElementById("pl-stop").onclick=()=>{audio.pause();clearInterval(P.tick);P.block=null;document.getElementById("player").hidden=true;renderToday();};
+try{ if("mediaSession" in navigator){ navigator.mediaSession.setActionHandler("nexttrack",()=>document.getElementById("pl-next").click()); navigator.mediaSession.setActionHandler("previoustrack",()=>document.getElementById("pl-prev").click()); } }catch(e){}
+
+/* ---------- Today ---------- */
+function nextBlockIndex(now=new Date()){
+  const m=now.getHours()*60+now.getMinutes(), d=now.getDay();
+  let best=-1,bm=1e9;
+  st.blocks.forEach((b,i)=>{if(!b.on||!b.days.includes(d))return;const bmn=toMin(b.time);if(bmn+b.minutes>=m&&bmn<bm){bm=bmn;best=i;}});
+  return best;
+}
+function renderToday(){
+  const now=new Date(); const el=document.getElementById("tab-today");
+  const ni=nextBlockIndex(now); const nb=ni>=0?st.blocks[ni]:st.blocks[0];
+  const n=notifText(nb,now);
+  const greet=greetingFor(`${String(now.getHours()).padStart(2,"0")}:${String(now.getMinutes()).padStart(2,"0")}`);
+  const total=st.blocks.filter(b=>b.on).reduce((a,b)=>a+Number(b.minutes||0),0);
+  const wk=planWeek();
+  el.innerHTML=`
+  <div class="wrap">
+    <div class="hello">
+      <span class="eyebrow">${now.toLocaleDateString(undefined,{weekday:"long",day:"numeric",month:"long"})} · Plan week ${wk} of 12</span>
+      <h1>${esc(S.salam.en)}, ${esc(greet)}${st.name?", "+esc(st.name):""}</h1>
+      <p class="muted">Today's label: <span class="label-chip">${esc(labelToday())}</span></p>
+    </div>
+    <div class="lock" aria-label="Notification preview">
+      <div class="clock">${esc(nb.time)}</div>
+      <div class="date">${ni>=0?"Next reminder":"First reminder tomorrow"} · ${esc(BLOCK_DEFS.find(d=>d.key===nb.key).anchor)}</div>
+      ${notifHTML(n,"now")}
+    </div>
+    <div class="budget">
+      <div class="row" style="justify-content:space-between"><span class="eyebrow">Today's listening</span><span class="small" style="font-variant-numeric:tabular-nums">${total} of 120 min</span></div>
+      <div class="bar ${total>120?"over":""}"><i style="width:${Math.min(100,total/120*100)}%"></i></div>
+      ${total>120?`<p class="small" style="color:var(--warn)">Over the 2-hour daily limit. Shorten a block in Schedule.</p>`:""}
+    </div>
+    <div class="blocks">
+      ${st.blocks.map((b,i)=>{
+        const def=BLOCK_DEFS.find(d=>d.key===b.key); const c=blockContent(b);
+        const activeDay=b.days.includes(now.getDay());
+        const done=st.fired[b.key]===todayStr();
+        const isPlaying=P.block===i&&P.playing;
+        const pill=isPlaying?`<span class="pill now">Playing</span>`:done?`<span class="pill done">Started today</span>`:i===ni?`<span class="pill">Next</span>`:"";
+        return `<div class="blk ${(!b.on||!activeDay)?"off":""} ${i===ni?"next":""}">
+          <div class="t">${esc(b.time)}<span>${b.minutes} min</span></div>
+          <div class="info">
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><h3>${esc(def.name)}</h3>${pill}</div>
+            <div class="what">${esc(c.note)} · ${esc(listText(c.items,"en",4))}</div>
+            ${(!b.on||!activeDay)?`<div class="small muted">${!b.on?"Turned off":"Not scheduled today"}</div>`:""}
+          </div>
+          <div class="btns">
+            <button class="btn primary" data-play="${i}">Bismillah ▶</button>
+            <button class="btn ghost" data-preview="${i}">Preview</button>
+          </div>
+        </div>`;}).join("")}
+    </div>
+    <p class="note">Reminders fire while this page is open. The phone app will fire them with the screen locked. Recitation streams per ayah from EveryAyah.</p>
+  </div>`;
+  el.querySelectorAll("[data-play]").forEach(x=>x.onclick=()=>startBlock(+x.dataset.play));
+  el.querySelectorAll("[data-preview]").forEach(x=>x.onclick=()=>showToast(+x.dataset.preview));
+  el.querySelector("[data-play-from-notif]").onclick=()=>startBlock(ni>=0?ni:0);
+}
+
+/* ---------- toast (in-page notification) ---------- */
+function showToast(i){
+  const b=st.blocks[i]; const n=notifText(b);
+  const t=document.getElementById("toast");
+  t.innerHTML=`<div class="lock" style="position:relative">${notifHTML(n,b.time)}<button class="x" aria-label="Dismiss">×</button></div>`;
+  t.hidden=false;
+  t.querySelector("[data-play-from-notif]").onclick=()=>{t.hidden=true;startBlock(i);};
+  t.querySelector(".x").onclick=()=>{t.hidden=true;};
+}
+function fireSystemNotification(i){
+  try{
+    if(!("Notification" in window)||Notification.permission!=="granted")return;
+    const n=notifText(st.blocks[i]);
+    const sn=new Notification(n.title,{body:n.body,tag:st.blocks[i].key,dir:n.rtl?"rtl":"ltr"});
+    sn.onclick=()=>{window.focus();showToast(i);sn.close();};
+  }catch(e){}
+}
+setInterval(()=>{
+  const now=new Date(), m=now.getHours()*60+now.getMinutes(), d=now.getDay();
+  st.blocks.forEach((b,i)=>{
+    if(!b.on||!b.days.includes(d))return;
+    const bm=toMin(b.time); const key="n_"+b.key;
+    if(m>=bm&&m<bm+30&&st.fired[key]!==todayStr()){
+      st.fired[key]=todayStr(); save(); showToast(i); fireSystemNotification(i);
+    }
+  });
+  if(!document.getElementById("tab-today").hidden&&!P.playing)renderToday();
+},20000);
+
+/* ---------- Schedule ---------- */
+function surahOptions(sel){return SURAH.map((x,i)=>`<option value="${i+1}" ${i+1===sel?"selected":""}>${i+1}. ${esc(x[0])}</option>`).join("");}
+function renderSchedule(){
+  const el=document.getElementById("tab-schedule");
+  const total=st.blocks.filter(b=>b.on).reduce((a,b)=>a+Number(b.minutes||0),0);
+  el.innerHTML=`<div class="wrap" style="padding-top:8px">
+    <div class="budget">
+      <div class="row" style="justify-content:space-between"><h2>Daily blocks</h2><span class="small" style="font-variant-numeric:tabular-nums">${total} of 120 min</span></div>
+      <div class="bar ${total>120?"over":""}"><i style="width:${Math.min(100,total/120*100)}%"></i></div>
+    </div>
+    ${st.blocks.map((b,i)=>{
+      const def=BLOCK_DEFS.find(d=>d.key===b.key);
+      return `<div class="panel" data-b="${i}">
+        <div class="row" style="justify-content:space-between;align-items:center">
+          <h3>${esc(def.name)}</h3>
+          <label class="switch"><input type="checkbox" id="on-${i}" ${b.on?"checked":""}> On</label>
+        </div>
+        <div class="row">
+          <div class="field"><label for="time-${i}">Time (${esc(def.anchor)})</label><input type="time" id="time-${i}" value="${esc(b.time)}"></div>
+          <div class="field"><label for="min-${i}">Max minutes</label><input type="number" id="min-${i}" min="1" max="120" value="${b.minutes}"></div>
+        </div>
+        <div class="field"><label>Days</label><div class="days">${DAY_SHORT.map((d,k)=>`<button type="button" data-day="${k}" aria-pressed="${b.days.includes(k)}">${d}</button>`).join("")}</div></div>
+        <div class="field"><label>What it plays</label>
+          <div class="seg"><button type="button" data-mode="standard" aria-pressed="${b.mode==="standard"}">Standard plan</button><button type="button" data-mode="custom" aria-pressed="${b.mode==="custom"}">My own</button></div>
+        </div>
+        ${b.mode==="standard"
+          ?`<p class="small muted">${esc(blockContent(b).note)}: ${esc(listText(blockContent(b).items,"en",5))}</p>`
+          :`<div class="items">${(b.items.length?b.items:[]).map((it,k)=>`<div class="item" data-k="${k}">
+              <div class="field"><label for="s-${i}-${k}">Surah</label><select id="s-${i}-${k}" data-f="s">${surahOptions(it.s)}</select></div>
+              <div class="field"><label for="f-${i}-${k}">From ayah</label><input type="number" id="f-${i}-${k}" data-f="f" min="1" max="${SURAH[it.s-1][2]}" value="${it.f}"></div>
+              <div class="field"><label for="t-${i}-${k}">To ayah</label><input type="number" id="t-${i}-${k}" data-f="t" min="1" max="${SURAH[it.s-1][2]}" value="${it.t}"></div>
+              <button class="btn ghost danger" type="button" data-del="${k}">Remove</button>
+            </div>`).join("")}
+            <div class="row">
+              <button class="btn" type="button" data-add>Add surah or ayat</button>
+              <div class="field"><label for="rep-${i}">Repeat each ayah</label><input type="number" id="rep-${i}" min="1" max="20" value="${b.repeat||1}"></div>
+            </div></div>`}
+      </div>`;}).join("")}
+  </div>`;
+  el.querySelectorAll(".panel").forEach(p=>{
+    const i=+p.dataset.b, b=st.blocks[i];
+    p.querySelector(`#on-${i}`).onchange=e=>{b.on=e.target.checked;save();renderSchedule();};
+    p.querySelector(`#time-${i}`).onchange=e=>{if(e.target.value){b.time=e.target.value;save();}};
+    p.querySelector(`#min-${i}`).onchange=e=>{b.minutes=Math.max(1,Math.min(120,+e.target.value||1));save();renderSchedule();};
+    p.querySelectorAll("[data-day]").forEach(x=>x.onclick=()=>{const k=+x.dataset.day;b.days=b.days.includes(k)?b.days.filter(d=>d!==k):[...b.days,k];save();renderSchedule();});
+    p.querySelectorAll("[data-mode]").forEach(x=>x.onclick=()=>{b.mode=x.dataset.mode;if(b.mode==="custom"&&!b.items.length)b.items=blockContent({...b,mode:"standard"}).items.slice(0,3).map(o=>({...o}));save();renderSchedule();});
+    const add=p.querySelector("[data-add]"); if(add)add.onclick=()=>{b.items.push(full(1));save();renderSchedule();};
+    const rep=p.querySelector(`#rep-${i}`); if(rep)rep.onchange=e=>{b.repeat=Math.max(1,Math.min(20,+e.target.value||1));save();};
+    p.querySelectorAll(".item").forEach(row=>{
+      const k=+row.dataset.k, it=b.items[k];
+      row.querySelector('[data-f="s"]').onchange=e=>{it.s=+e.target.value;it.f=1;it.t=SURAH[it.s-1][2];save();renderSchedule();};
+      row.querySelector('[data-f="f"]').onchange=e=>{it.f=Math.max(1,Math.min(SURAH[it.s-1][2],+e.target.value||1));if(it.t<it.f)it.t=it.f;save();renderSchedule();};
+      row.querySelector('[data-f="t"]').onchange=e=>{it.t=Math.max(it.f,Math.min(SURAH[it.s-1][2],+e.target.value||it.f));save();renderSchedule();};
+      row.querySelector("[data-del]").onclick=()=>{b.items.splice(k,1);save();renderSchedule();};
+    });
+  });
+}
+
+/* ---------- Labels ---------- */
+function renderLabels(){
+  const el=document.getElementById("tab-labels");
+  el.innerHTML=`<div class="wrap" style="padding-top:8px">
+    <div><h2>Daily labels</h2><p class="muted small">One label greets you each day, in turn. They describe who you hope to be, never a claim about your place with Allah.</p></div>
+    <div class="labels">${S.labels.map(l=>`<label><input type="checkbox" data-l="${l.key}" ${st.labelsOn.includes(l.key)?"checked":""}><span>${esc(l.en)} <span class="muted small">· ${esc(l.id)}</span></span><span class="ar">${esc(l.ar[st.arForm])}</span></label>`).join("")}
+    ${st.customLabels.map((t,k)=>`<label><span>✦</span><span>${esc(t)}</span><button class="btn ghost danger" type="button" data-rm="${k}">Remove</button></label>`).join("")}</div>
+    <div class="panel">
+      <div class="field"><label for="newlabel">Add your own</label><input type="text" id="newlabel" placeholder="${esc(S.rotation.custom_label_hint.en)}" maxlength="40"></div>
+      <div class="row"><button class="btn primary" type="button" id="addlabel">Add label</button></div>
+      <p class="small muted">Today's label: <b>${esc(labelToday())}</b></p>
+    </div>
+  </div>`;
+  el.querySelectorAll("[data-l]").forEach(x=>x.onchange=()=>{const k=x.dataset.l;st.labelsOn=x.checked?[...st.labelsOn,k]:st.labelsOn.filter(v=>v!==k);save();renderLabels();});
+  el.querySelectorAll("[data-rm]").forEach(x=>x.onclick=()=>{st.customLabels.splice(+x.dataset.rm,1);save();renderLabels();});
+  el.querySelector("#addlabel").onclick=()=>{const v=el.querySelector("#newlabel").value.trim();if(v){st.customLabels.push(v);save();renderLabels();}};
+}
+
+/* ---------- Settings ---------- */
+function renderSettings(){
+  const el=document.getElementById("tab-settings");
+  let perm="Not supported in this browser";
+  try{if("Notification" in window)perm={granted:"Allowed",denied:"Blocked by the browser",default:"Not asked yet"}[Notification.permission];}catch(e){}
+  el.innerHTML=`<div class="wrap" style="padding-top:8px">
+    <div class="panel">
+      <h3>You</h3>
+      <div class="row">
+        <div class="field" style="flex:1"><label for="nm">Name (optional)</label><input type="text" id="nm" value="${esc(st.name)}" maxlength="30" placeholder="Shown on some days instead of the label"></div>
+        <div class="field"><label for="pf">Listener</label><select id="pf">${Object.entries(PROFILES).map(([k,v])=>`<option value="${k}" ${st.profile===k?"selected":""}>${v.name}</option>`).join("")}</select></div>
+      </div>
+      <p class="small muted">Changing the listener resets block lengths to that profile: adult 120, teen 90, child 50 minutes a day.</p>
+    </div>
+    <div class="panel">
+      <h3>Plan progress</h3>
+      <div class="row">
+        <div class="field"><label for="wk">Current week</label><select id="wk">${Array.from({length:12},(_,i)=>`<option value="${i+1}" ${planWeek()===i+1?"selected":""}>Week ${i+1}: ${esc(listText(plan()[i].length?plan()[i]:[{s:1,f:1,t:7}],"en",3))}${plan()[i].length?"":" (consolidate)"}</option>`).join("")}</select></div>
+      </div>
+      <p class="small muted">The week moves forward on its own every 7 days. Starting point: Al-Fatihah already known.</p>
+    </div>
+    <div class="panel">
+      <h3>Reminders</h3>
+      <div class="row">
+        <div class="field"><label for="lg">Language</label><select id="lg"><option value="en" ${st.lang==="en"?"selected":""}>English</option><option value="id" ${st.lang==="id"?"selected":""}>Bahasa Indonesia</option><option value="ar" ${st.lang==="ar"?"selected":""}>العربية</option></select></div>
+        <div class="field"><label for="af">Arabic address form</label><select id="af"><option value="m" ${st.arForm==="m"?"selected":""}>Male</option><option value="f" ${st.arForm==="f"?"selected":""}>Female</option></select></div>
+        <label class="switch"><input type="checkbox" id="em" ${st.emoji?"checked":""}> Emoji</label>
+      </div>
+      <div class="row"><button class="btn" type="button" id="perm">Allow browser notifications</button><span class="small muted">Status: ${esc(perm)}</span></div>
+    </div>
+    <div class="panel">
+      <h3>Reciters</h3>
+      <p class="small muted">Keep one hifz reciter for years: the melody helps you remember.</p>
+      <div class="row">
+        <div class="field"><label for="rh">Hifz blocks</label><select id="rh">${RECITERS.map(r=>`<option value="${r[0]}" ${st.hifzReciter===r[0]?"selected":""}>${esc(r[1])}</option>`).join("")}</select></div>
+        <div class="field"><label for="rc">Calm and bedtime</label><select id="rc">${RECITERS.map(r=>`<option value="${r[0]}" ${st.calmReciter===r[0]?"selected":""}>${esc(r[1])}</option>`).join("")}</select></div>
+      </div>
+    </div>
+    <div class="panel">
+      <h3>Reset</h3>
+      <p class="small muted">Return every setting, block and label to the standard plan.</p>
+      <div class="row" id="resetrow"><button class="btn danger" type="button" id="reset">Reset to standard plan</button></div>
+    </div>
+  </div>`;
+  el.querySelector("#nm").onchange=e=>{st.name=e.target.value.trim();save();};
+  el.querySelector("#pf").onchange=e=>{st.profile=e.target.value;const pr=PROFILES[st.profile];st.blocks.forEach(b=>{b.minutes=pr.min[b.key];b.repeat=pr.rep;});save();renderSettings();};
+  el.querySelector("#wk").onchange=e=>{const w=+e.target.value;const d=new Date();d.setDate(d.getDate()-(w-1)*7);st.startDate=todayStr(d);save();};
+  el.querySelector("#lg").onchange=e=>{st.lang=e.target.value;save();};
+  el.querySelector("#af").onchange=e=>{st.arForm=e.target.value;save();};
+  el.querySelector("#em").onchange=e=>{st.emoji=e.target.checked;save();};
+  el.querySelector("#rh").onchange=e=>{st.hifzReciter=e.target.value;save();};
+  el.querySelector("#rc").onchange=e=>{st.calmReciter=e.target.value;save();};
+  el.querySelector("#perm").onclick=async()=>{try{await Notification.requestPermission();}catch(e){}renderSettings();};
+  el.querySelector("#reset").onclick=()=>{
+    const row=el.querySelector("#resetrow");
+    row.innerHTML=`<span class="small">Reset everything?</span><button class="btn danger" type="button" id="yes">Yes, reset</button><button class="btn" type="button" id="no">Cancel</button>`;
+    row.querySelector("#yes").onclick=()=>{st=defaults();save();renderSettings();};
+    row.querySelector("#no").onclick=()=>renderSettings();
+  };
+}
+
+/* ---------- tabs ---------- */
+const renderers={today:renderToday,schedule:renderSchedule,labels:renderLabels,settings:renderSettings};
+document.querySelectorAll("nav.tabs button").forEach(b=>b.onclick=()=>{
+  document.querySelectorAll("nav.tabs button").forEach(x=>x.setAttribute("aria-selected",x===b));
+  Object.keys(renderers).forEach(k=>document.getElementById("tab-"+k).hidden=k!==b.dataset.tab);
+  renderers[b.dataset.tab](); window.scrollTo({top:0});
+});
+renderToday();
+</script>
+
+</body>
+</html>
