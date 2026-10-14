@@ -284,9 +284,9 @@ function blockContent(b,date=new Date()){
 }
 function buildQueue(c){
   const q=[];
-  // Every listening opens with Al-Fatihah once (skipped when the block itself begins with it).
+  // Every listening opens with Al-Fatihah once (skipped when the block itself begins with the whole surah).
   const first=c.items[0];
-  if(!(first&&first.s===1&&first.f===1))for(let a=1;a<=7;a++)q.push({s:1,a,opening:true});
+  if(!(first&&first.s===1&&first.f===1&&first.t===7))for(let a=1;a<=7;a++)q.push({s:1,a,opening:true});
   for(let w=0;w<c.whole;w++)for(const it of c.items){
     if(it.f===1&&it.s!==1&&it.s!==9)q.push({s:1,a:1,basmala:true,of:it.s});
     for(let a=it.f;a<=it.t;a++)for(let r=0;r<c.rep;r++)q.push({s:it.s,a});
