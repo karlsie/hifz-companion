@@ -284,6 +284,9 @@ function blockContent(b,date=new Date()){
 }
 function buildQueue(c){
   const q=[];
+  // Every listening opens with Al-Fatihah once (skipped when the block itself begins with it).
+  const first=c.items[0];
+  if(!(first&&first.s===1&&first.f===1))for(let a=1;a<=7;a++)q.push({s:1,a,opening:true});
   for(let w=0;w<c.whole;w++)for(const it of c.items){
     if(it.f===1&&it.s!==1&&it.s!==9)q.push({s:1,a:1,basmala:true,of:it.s});
     for(let a=it.f;a<=it.t;a++)for(let r=0;r<c.rep;r++)q.push({s:it.s,a});
@@ -344,7 +347,7 @@ function loadTrack(){
   audio.src=audioUrl(P.folder,t.s,t.a);
   const p=audio.play(); if(p&&p.catch)p.catch(()=>{});
   const b=st.blocks[P.block];
-  document.getElementById("pl-title").textContent=t.basmala?`Basmala · ${SURAH[t.of-1][0]}`:`${SURAH[t.s-1][0]} ${t.s}:${t.a}`;
+  document.getElementById("pl-title").textContent=t.basmala?`Basmala · ${SURAH[t.of-1][0]}`:t.opening?`Opening · Al-Fatihah 1:${t.a}`:`${SURAH[t.s-1][0]} ${t.s}:${t.a}`;
   updateSub();
   try{ if("mediaSession" in navigator){ navigator.mediaSession.metadata=new MediaMetadata({title:document.getElementById("pl-title").textContent,artist:RECITERS.find(r=>r[0]===P.folder)[1],album:BLOCK_DEFS.find(d=>d.key===b.key).name}); } }catch(e){}
   const n=P.queue[P.i+1]; if(n){const pre=new Audio();pre.preload="auto";pre.src=audioUrl(P.folder,n.s,n.a);}
@@ -425,7 +428,7 @@ function renderToday(){
           <div class="t">${esc(b.time)}<span>${b.minutes} min</span></div>
           <div class="info">
             <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><h3>${esc(def.name)}</h3>${pill}</div>
-            <div class="what">${esc(c.note)} · ${esc(listText(c.items,"en",4))}</div>
+            <div class="what">Opens with Al-Fatihah · ${esc(c.note)} · ${esc(listText(c.items,"en",4))}</div>
             ${(!b.on||!activeDay)?`<div class="small muted">${!b.on?"Turned off":"Not scheduled today"}</div>`:""}
           </div>
           <div class="btns">
